@@ -205,7 +205,7 @@ for file in unique_files:
 plt.ylabel('signal latency (ms)', fontsize= 15)
 plt.xlabel('external stimulation pulse number', fontsize= 15)
 
-#%%comapre mouse to human speed
+#%%comapre speeds 
 
 
 df_control_total = df_total_pass[df_total_pass['condition'] == 'control'].groupby(['file_name', 'species_x']).mean().reset_index()

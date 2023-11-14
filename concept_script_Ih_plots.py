@@ -71,11 +71,11 @@ metadata['distance'] = (metadata['x_dif']**2 + metadata['y_dif']**2)**0.5
 
 #merge metadta with the ephys data
 
-df_total_pass = pd.merge(df_total_pass, metadata, on='file') 
+df_merge = pd.merge(df_total_pass, metadata, on='file') 
 
 #calculate uM/ms 
 
-df_total_pass['speed']= df_total_pass['distance']/df_total_pass['0']
+df_merge['speed']= df_merge['distance']/df_total_pass['0']
 
 #get normalized speeds aswell
 
@@ -83,8 +83,20 @@ df_total_pass['speed']= df_total_pass['distance']/df_total_pass['0']
 #plot some data distributions
 import seaborn as sns
 import matplotlib.pyplot as plt
-mouse_data = df_total_pass.loc[df_total_pass['species_y'] == 'mouse'].groupby(['file_name', 'condition']).mean().reset_index()
-human_data = df_total_pass.loc[df_total_pass['species_y'] == 'human'].groupby(['file_name', 'condition']).mean().reset_index()
+mouse_data = df_merge[df_merge['species_x']=='mouse']
+human_data = df_merge[df_merge['species_x']== 'human']
+
+mouse_data_average = mouse_data.groupby(['condition', 'file_name']).mean().reset_index()
+human_data_average = human_data.groupby(['condition', 'file_name']).mean().reset_index()
+
+#plot average lines 
+for i in mouse_data_average.file_name:
+    temp = mouse_data_average[mouse_data_average['file_name'] == i]
+    sns.lineplot(data=temp, x='condition', y = '0')
+
+for i in human_data_average.file_name:
+    temp = human_data_average[human_data_average['file_name'] == i]
+    sns.lineplot(data=temp, x='condition', y = '0')
 
 
 

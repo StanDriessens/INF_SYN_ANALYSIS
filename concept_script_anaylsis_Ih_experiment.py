@@ -43,7 +43,7 @@ while condition != 'ZD' and condition != 'control':
     if condition == 'ZD':
         cond = 'TTL_test_ZD'
     elif condition == 'control':
-        cond = 'TTL_test_GAP'
+        cond = 'TTL_test_gap'
     else:
         print('wrong input, try again')
 species = input('please provide species (human/mouse)')
@@ -57,13 +57,46 @@ f = h5py.File(file, 'r')
 stim = pd.DataFrame(list(f['stimulus']['presentation'].keys()), columns=['ttl'])
 #create list with only TTL file names
 data_TTL = stim[stim['ttl'].str.contains('TTL')]
-
 #select subset of sweeps 
 subset = list(all_sweeps.loc[all_sweeps['stimulus_code']==cond].sweep_number)
 #convert to string for search
 strings = [str(x) for x in subset]
 #only select TTLs for subselected sweep numbers 
 selected_TTLs = data_TTL[data_TTL['ttl'].str.contains('|'.join(strings))].reset_index(drop=True)
+"""
+work in progress to make sure TTL matches the correct sweep incase wrong gap free was used 
+
+works now 
+"""
+
+
+if condition == 'control':
+    ttl_accept = []
+    sweeps_to_analyze = []
+    for i in selected_TTLs.ttl:
+        temp = str(f['stimulus']['presentation'][i].attrs['stimulus_description'])
+        if '10hz' in temp:
+            sweep_number = f['stimulus']['presentation'][i].attrs['sweep_number']
+            DA_sweep = all_sweeps.iloc[sweep_number]
+            if 'ZD' not in DA_sweep.stimulus_code:
+                ttl_accept.append(i)
+                sweeps_to_analyze.append(int(DA_sweep.sweep_number))
+                
+if condition == 'ZD':
+    ttl_accept = []
+    sweeps_to_analyze = []
+    for i in selected_TTLs.ttl:
+        temp = str(f['stimulus']['presentation'][i].attrs['stimulus_description'])
+        if '10hz' in temp:
+            sweep_number = f['stimulus']['presentation'][i].attrs['sweep_number']
+            DA_sweep = all_sweeps.iloc[sweep_number]
+            if 'ZD' in DA_sweep.stimulus_code:
+                ttl_accept.append(i)
+                sweeps_to_analyze.append(int(DA_sweep.sweep_number))           
+
+
+
+
 #select sweeps to analyze
 sweeps_to_analyze = all_sweeps.loc[all_sweeps['stimulus_code']==cond].sweep_number.reset_index(drop=True)
 
@@ -168,14 +201,36 @@ strings = [str(x) for x in subset]
 #only select TTLs for subselected sweep numbers 
 selected_TTLs = data_TTL[data_TTL['ttl'].str.contains('|'.join(strings))].reset_index(drop=True)
 #select sweeps to analyze
-sweeps_to_analyze = all_sweeps.loc[all_sweeps['stimulus_code']==cond].sweep_number.reset_index(drop=True)
-  
+if condition == 'control':
+    ttl_accept = []
+    sweeps_to_analyze = []
+    for i in selected_TTLs.ttl:
+        temp = str(f['stimulus']['presentation'][i].attrs['stimulus_description'])
+        if '10hz' in temp:
+            sweep_number = f['stimulus']['presentation'][i].attrs['sweep_number']
+            DA_sweep = all_sweeps.iloc[sweep_number]
+            if 'ZD' not in DA_sweep.stimulus_code:
+                ttl_accept.append(i)
+                sweeps_to_analyze.append(int(DA_sweep.sweep_number))
+                
+if condition == 'ZD':
+    ttl_accept = []
+    sweeps_to_analyze = []
+    for i in selected_TTLs.ttl:
+        temp = str(f['stimulus']['presentation'][i].attrs['stimulus_description'])
+        if '10hz' in temp:
+            sweep_number = f['stimulus']['presentation'][i].attrs['sweep_number']
+            DA_sweep = all_sweeps.iloc[sweep_number]
+            if 'ZD' in DA_sweep.stimulus_code:
+                ttl_accept.append(i)
+                sweeps_to_analyze.append(int(DA_sweep.sweep_number))           
+
 fig,ax = plt.subplots(3,1, sharex=True)     
 average_list = []
 average_list_dvdt = []
-for i in range(1,len(sweeps_to_analyze)):
+for i in range(0,len(sweeps_to_analyze)):
     sweeps = []
-    ttl = selected_TTLs.ttl[i]
+    ttl = ttl_accept[i]
     ttl = np.array(f['stimulus']['presentation'][ttl]['data'])
     sweep = dataset.sweep(sweeps_to_analyze[i])
     #filter the signal please

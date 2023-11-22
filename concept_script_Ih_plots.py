@@ -67,7 +67,7 @@ df_total_pass = df_total.loc[df_total['qc'] == 'p']
 
 metadata=pd.read_csv(r'C:/Users/sdr267/Documents/PhD/ProjectSynapticConnections/Ih_experiment/metadata.csv')
 #triangulate distance using pythagoras 
-metadata['distance'] = (metadata['x_dif']**2 + metadata['y_dif']**2)**0.5
+metadata['distance'] = metadata['x_dif'] + metadata['y_dif']
 
 #merge metadta with the ephys data
 
@@ -75,7 +75,7 @@ df_merge = pd.merge(df_total_pass, metadata, on='file')
 
 #calculate uM/ms 
 
-df_merge['speed']= df_merge['distance']/df_total_pass['0']
+df_merge['speed']= df_merge['distance']/df_merge['0']
 
 #get normalized speeds aswell
 
@@ -86,17 +86,27 @@ import matplotlib.pyplot as plt
 mouse_data = df_merge[df_merge['species_x']=='mouse']
 human_data = df_merge[df_merge['species_x']== 'human']
 
-mouse_data_average = mouse_data.groupby(['condition', 'file_name']).mean().reset_index()
-human_data_average = human_data.groupby(['condition', 'file_name']).mean().reset_index()
+mouse_data_average = mouse_data.groupby(['condition', 'file_name', 'layer']).mean().reset_index()
+human_data_average = human_data.groupby(['condition', 'file_name', 'layer']).mean().reset_index()
 
 #plot average lines 
 for i in mouse_data_average.file_name:
     temp = mouse_data_average[mouse_data_average['file_name'] == i]
-    sns.lineplot(data=temp, x='condition', y = '0')
+    sns.pointplot(data=temp, x='condition', y = '0')
+plt.savefig(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\mouse_cells.eps')
+
 
 for i in human_data_average.file_name:
-    temp = human_data_average[human_data_average['file_name'] == i]
-    sns.lineplot(data=temp, x='condition', y = '0')
+    temp = human_data_average[human_data_average['file_name'] == i].reset_index()
+    if temp.layer[0] == 'deep L3':
+        sns.pointplot(data=temp, x='condition', y = '0', color = 'magenta')
+    elif temp.layer[0] == 'supp L2/3':
+        sns.pointplot(data=temp, x='condition', y = '0', color = 'b')
+    
+plt.savefig(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\human_cells_new.eps')
+
+sns.pointplot(data=human_data_average, x='condition', y='0', hue='layer')
+    
 
 
 

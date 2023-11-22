@@ -78,7 +78,7 @@ if condition == 'control':
         if '10hz' in temp:
             sweep_number = f['stimulus']['presentation'][i].attrs['sweep_number']
             DA_sweep = all_sweeps.iloc[sweep_number]
-            if 'ZD' not in DA_sweep.stimulus_code:
+            if 'TTL' in DA_sweep.stimulus_code and 'ZD' not in DA_sweep.stimulus_code and  'inbetwe' not in DA_sweep.stimulus_code:
                 ttl_accept.append(i)
                 sweeps_to_analyze.append(int(DA_sweep.sweep_number))
                 
@@ -90,7 +90,7 @@ if condition == 'ZD':
         if '10hz' in temp:
             sweep_number = f['stimulus']['presentation'][i].attrs['sweep_number']
             DA_sweep = all_sweeps.iloc[sweep_number]
-            if 'ZD' in DA_sweep.stimulus_code:
+            if 'ZD' in DA_sweep.stimulus_code  and  'inbetwe' not in DA_sweep.stimulus_code:
                 ttl_accept.append(i)
                 sweeps_to_analyze.append(int(DA_sweep.sweep_number))           
 
@@ -98,10 +98,9 @@ if condition == 'ZD':
 
 
 #select sweeps to analyze
-sweeps_to_analyze = all_sweeps.loc[all_sweeps['stimulus_code']==cond].sweep_number.reset_index(drop=True)
+#sweeps_to_analyze = all_sweeps.loc[all_sweeps['stimulus_code']==cond].sweep_number.reset_index(drop=True)
 
 response_onset = pd.DataFrame()
-
 for i in range(0,len(sweeps_to_analyze)):
     sweeps = []
     ttl = selected_TTLs.ttl[i]
@@ -201,6 +200,7 @@ strings = [str(x) for x in subset]
 #only select TTLs for subselected sweep numbers 
 selected_TTLs = data_TTL[data_TTL['ttl'].str.contains('|'.join(strings))].reset_index(drop=True)
 #select sweeps to analyze
+
 if condition == 'control':
     ttl_accept = []
     sweeps_to_analyze = []
@@ -209,7 +209,7 @@ if condition == 'control':
         if '10hz' in temp:
             sweep_number = f['stimulus']['presentation'][i].attrs['sweep_number']
             DA_sweep = all_sweeps.iloc[sweep_number]
-            if 'ZD' not in DA_sweep.stimulus_code:
+            if 'TTL' in DA_sweep.stimulus_code and 'ZD' not in DA_sweep.stimulus_code and  'inbetwe' not in DA_sweep.stimulus_code:
                 ttl_accept.append(i)
                 sweeps_to_analyze.append(int(DA_sweep.sweep_number))
                 
@@ -221,9 +221,9 @@ if condition == 'ZD':
         if '10hz' in temp:
             sweep_number = f['stimulus']['presentation'][i].attrs['sweep_number']
             DA_sweep = all_sweeps.iloc[sweep_number]
-            if 'ZD' in DA_sweep.stimulus_code:
+            if 'ZD' in DA_sweep.stimulus_code  and  'inbetwe' not in DA_sweep.stimulus_code:
                 ttl_accept.append(i)
-                sweeps_to_analyze.append(int(DA_sweep.sweep_number))           
+                sweeps_to_analyze.append(int(DA_sweep.sweep_number))              
 
 fig,ax = plt.subplots(3,1, sharex=True)     
 average_list = []
@@ -274,6 +274,9 @@ pulse_number = []
 onsets = []
 rise   = []
 qc_list = []
+rise_0_100 = []
+rise_10_90 = []
+amplitude  = []
 for j in range(0,len(peaks_ttl)):
     left_border = peaks_ttl[j]+1000
     right_border =  peaks_ttl[j]+5000
@@ -291,8 +294,17 @@ for j in range(0,len(peaks_ttl)):
             onset_index = np.where(aoi>threshold)[0][0] 
             ax[1].plot(t[left_border:right_border][onset_index], average[left_border:right_border][onset_index], 'x')
             peak_temp, nonsense = find_peaks(aoi2_v, prominence=.3)
-            rise.append(aoi2_t[peak_temp]-t[left_border:right_border][onset_index])
             ax[1].plot(t[left_border:right_border2][peak_temp], average[left_border:right_border2][peak_temp], 'x')
+            #plot rise times (0-100%)
+            ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]], color = 'r')
+            rise0_100  =  t[left_border:right_border2][peak_temp[0]]- t[left_border:right_border2][onset_index]
+            #plot rise time (10 - 90%)
+            total_rise = t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]]
+            index_start = int(.1*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
+            index_end   = int(.9*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
+            ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], average[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], color = 'b')
+            rise10_90 = t[left_border:right_border2][onset_index:peak_temp[0]][index_end] - t[left_border:right_border2][onset_index:peak_temp[0]][index_start]
+            amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
             print('printing new onset, press a button to continue')
             while True:
                 if plt.waitforbuttonpress():
@@ -302,12 +314,29 @@ for j in range(0,len(peaks_ttl)):
             qc_list.append(qc)
             onsets.append(t[left_border:right_border][onset_index]-t[peaks_ttl[j]])
             pulse_number.append(j)
+            rise_0_100.append(rise0_100)
+            rise_10_90.append(rise10_90)
+            amplitude.append(amp)
             print('analyzing event, press a button to continue')
     elif threshold < max(aoi):
         onset = 'f'
         while onset == 'f':
             onset_index = np.where(aoi>threshold)[0][0] 
             ax[1].plot(t[left_border:right_border][onset_index], average[left_border:right_border][onset_index], 'x')
+            onset_index = np.where(aoi>threshold)[0][0] 
+            ax[1].plot(t[left_border:right_border][onset_index], average[left_border:right_border][onset_index], 'x')
+            peak_temp, nonsense = find_peaks(aoi2_v, prominence=.3)
+            ax[1].plot(t[left_border:right_border2][peak_temp], average[left_border:right_border2][peak_temp], 'x')
+            #plot rise times (0-100%)
+            ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]], color = 'r')
+            rise0_100  =  t[left_border:right_border2][peak_temp[0]]- t[left_border:right_border2][onset_index]
+            #plot rise time (10 - 90%)
+            total_rise = t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]]
+            index_start = int(.1*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
+            index_end   = int(.9*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
+            ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], average[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], color = 'b')
+            rise10_90 = t[left_border:right_border2][onset_index:peak_temp[0]][index_end] - t[left_border:right_border2][onset_index:peak_temp[0]][index_start]
+            amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
             while True:
                 if plt.waitforbuttonpress():
                     break 
@@ -317,13 +346,19 @@ for j in range(0,len(peaks_ttl)):
         qc = input('Does the event qc pass? ')
         onsets.append(t[left_border:right_border][onset_index]-t[peaks_ttl[j]])
         pulse_number.append(j)
+        rise_0_100.append(rise0_100)
+        rise_10_90.append(rise10_90)
         qc_list.append(qc)
+        amplitude.append(amp)
 onsets_df = pd.DataFrame(onsets)
 onsets_df['condition'] = condition
 onsets_df['file_name'] = f.filename
 onsets_df['species']   = species
 onsets_df['n_pulse']   = pulse_number
 onsets_df['qc']        = qc_list
+onsets_df['rise']      = rise_0_100
+onsets_df['rise%10_90']= rise_10_90
+onsets_df['amplitude'] = amplitude
 
 if species == 'human':
     save_name = f.filename[82:101]+'.csv'

@@ -35,6 +35,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox as mb
 from tkinter import Radiobutton
+from tkinter import simpledialog
 
 
 #%%AVERAGE OVER SWEEPS
@@ -119,6 +120,8 @@ if 'ZD' in cond:
                 sweeps_to_analyze.append(int(DA_sweep.sweep_number))    
 else:
     print('analysis has stopped no correct protocol selected')
+    print('do you want to analyze sweeps manually? ')
+    sweeps_to_analyze = list(simpledialog.askstring('Sweeps', 'Please enter sweep numbers to analyze in list format [21, 23 , etc]'))
     
 
 fig,ax = plt.subplots(3,1, sharex=True)     

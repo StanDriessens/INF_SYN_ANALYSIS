@@ -296,15 +296,33 @@ for j in range(0,len(peaks_ttl)):
             peak_temp, nonsense = find_peaks(aoi2_v, prominence=.3)
             ax[1].plot(t[left_border:right_border2][peak_temp], average[left_border:right_border2][peak_temp], 'x')
             #plot rise times (0-100%)
+            #adjust rise time so we take 10-90% of maxium in V not t. 
+            amp = average[left_border:right_border2][peak_temp] - average[left_border:right_border][onset_index]
+            amp_10 = average[left_border:right_border][onset_index] + 0.1*amp
+            amp_90 = average[left_border:right_border2][onset_index] + 0.9*amp 
+            #cooridanted of amp_10 - ampg_90
+            amp_10_x = np.where(average[left_border:right_border] > amp_10)[0][0]
+            amp_90_x = np.where(average[left_border:right_border2] > amp_90)[0][0]
+            
+            #plot total rise time
             ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]], color = 'r')
             rise0_100  =  t[left_border:right_border2][peak_temp[0]]- t[left_border:right_border2][onset_index]
+            """
+            code below assumed 10 - 90 % of time not the time 10%90% of amplitude 
+            
             #plot rise time (10 - 90%)
-            total_rise = t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]]
-            index_start = int(.1*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
-            index_end   = int(.9*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
-            ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], average[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], color = 'b')
-            rise10_90 = t[left_border:right_border2][onset_index:peak_temp[0]][index_end] - t[left_border:right_border2][onset_index:peak_temp[0]][index_start]
-            amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
+            #total_rise = t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]]
+            #index_start = int(.1*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
+            #index_end   = int(.9*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
+            #ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], average[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], color = 'b')
+            #rise10_90 = t[left_border:right_border2][onset_index:peak_temp[0]][index_end] - t[left_border:right_border2][onset_index:peak_temp[0]][index_start]
+            #amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
+            """
+            
+            #plot 
+            ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'b')
+            rise10_90 = t[left_border:right_border2][amp_90_x] - t[left_border:right_border2][amp_10_x]
+            
             print('printing new onset, press a button to continue')
             while True:
                 if plt.waitforbuttonpress():
@@ -327,16 +345,31 @@ for j in range(0,len(peaks_ttl)):
             ax[1].plot(t[left_border:right_border][onset_index], average[left_border:right_border][onset_index], 'x')
             peak_temp, nonsense = find_peaks(aoi2_v, prominence=.3)
             ax[1].plot(t[left_border:right_border2][peak_temp], average[left_border:right_border2][peak_temp], 'x')
-            #plot rise times (0-100%)
+            amp = average[left_border:right_border2][peak_temp] - average[left_border:right_border][onset_index]
+            amp_10 = average[left_border:right_border][onset_index] + 0.1*amp
+            amp_90 = average[left_border:right_border2][onset_index] + 0.9*amp 
+            #cooridanted of amp_10 - ampg_90
+            amp_10_x = np.where(average[left_border:right_border] > amp_10)[0][0]
+            amp_90_x = np.where(average[left_border:right_border2] > amp_90)[0][0]
+            
+            #plot total rise time
             ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]], color = 'r')
             rise0_100  =  t[left_border:right_border2][peak_temp[0]]- t[left_border:right_border2][onset_index]
+            """
+            code below assumed 10 - 90 % of time not the time 10%90% of amplitude 
+            
             #plot rise time (10 - 90%)
-            total_rise = t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]]
-            index_start = int(.1*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
-            index_end   = int(.9*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
-            ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], average[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], color = 'b')
-            rise10_90 = t[left_border:right_border2][onset_index:peak_temp[0]][index_end] - t[left_border:right_border2][onset_index:peak_temp[0]][index_start]
-            amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
+            #total_rise = t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]]
+            #index_start = int(.1*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
+            #index_end   = int(.9*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
+            #ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], average[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], color = 'b')
+            #rise10_90 = t[left_border:right_border2][onset_index:peak_temp[0]][index_end] - t[left_border:right_border2][onset_index:peak_temp[0]][index_start]
+            #amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
+            """
+            
+            #plot 
+            ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'b')
+            rise10_90 = t[left_border:right_border2][amp_90_x] - t[left_border:right_border2][amp_10_x]
             while True:
                 if plt.waitforbuttonpress():
                     break 
@@ -367,4 +400,6 @@ elif species == 'mouse':
     save_name = f.filename[77:102]+'.csv'
     onsets_df.to_csv(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\\' + save_name)
 
-    
+#%%
+
+from  get_PSP_param import get_synaptic_params

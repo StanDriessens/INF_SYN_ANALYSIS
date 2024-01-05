@@ -36,6 +36,7 @@ from tkinter import filedialog
 from tkinter import messagebox as mb
 from tkinter import Radiobutton
 from tkinter import simpledialog
+plt.style.use('dark_background')
 
 
 #%%AVERAGE OVER SWEEPS
@@ -149,10 +150,10 @@ for i in range(0,len(sweeps_to_analyze)):
     dv = np.gradient(v_filt, edge_order=1)
     dt = np.gradient(sweep.t, edge_order=1)
     dvdt = dv/dt
-    ax[0].plot(sweep.t*1e3, ttl, color='k')
+    ax[0].plot(sweep.t*1e3, ttl, color='w')
     ax[0].plot(sweep.t[peaks_ttl]*1e3, ttl[peaks_ttl],  'x', color='red')
     ax[1].plot(sweep.t*1e3, v_filt, color='lightgrey')
-    ax[2].plot(sweep.t*1e3, dvdt, color='k')
+    ax[2].plot(sweep.t*1e3, dvdt, color='w')
     #calculate and make an average
     average_list.append(v_filt)
     average_list_dvdt.append(dvdt)
@@ -162,10 +163,11 @@ ax[1].plot(sweep.t*1e3, average, color='red')
 ax[2].plot(sweep.t*1e3, average_dvdt, color='red')
 tkinter.messagebox.showinfo('average tracing', message='press OK to continue event analysis')
 #%%detect average events per set 
-fig,ax = plt.subplots(3,1, sharex=True)     
-ax[0].plot(sweep.t*1e3, ttl, color='k')
-ax[1].plot(sweep.t*1e3, average, color='k')
-ax[2].plot(sweep.t*1e3, average_dvdt, color='k')
+fig,ax = plt.subplots(3,1, sharex=True)
+fig.set_size_inches(12,6)     
+ax[0].plot(sweep.t*1e3, ttl, color='w')
+ax[1].plot(sweep.t*1e3, average, color='w')
+ax[2].plot(sweep.t*1e3, average_dvdt, color='w')
 ax[2].set_ylim(-1000, 1000)
 peaks_ttl, nonesne = find_peaks(ttl, 1) 
 t=sweep.t*1e3
@@ -219,7 +221,7 @@ for j in range(0,len(peaks_ttl)):
             """
             
             #plot and save ris time
-            ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'b')
+            ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'lime')
             rise10_90 = t[left_border:right_border2][amp_90_x] - t[left_border:right_border2][amp_10_x]
             #refresh plot
             fig.canvas.draw()    
@@ -264,7 +266,7 @@ for j in range(0,len(peaks_ttl)):
             """
             
             #plot 
-            ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'b')
+            ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'lime')
             rise10_90 = t[left_border:right_border2][amp_90_x] - t[left_border:right_border2][amp_10_x]
             #refresh plot
             fig.canvas.draw()

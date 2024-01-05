@@ -95,7 +95,7 @@ strings = [str(x) for x in subset]
 selected_TTLs = data_TTL[data_TTL['ttl'].str.contains('|'.join(strings))].reset_index(drop=True)
 #select sweeps to analyze
 
-if 'control' in cond:
+if 'control' in cond or 'test':
     ttl_accept = []
     sweeps_to_analyze = []
     for i in selected_TTLs.ttl:
@@ -118,10 +118,10 @@ if 'ZD' in cond:
             if 'ZD' in DA_sweep.stimulus_code  and  'inbetwe' not in DA_sweep.stimulus_code:
                 ttl_accept.append(i)
                 sweeps_to_analyze.append(int(DA_sweep.sweep_number))    
-else:
-    print('analysis has stopped no correct protocol selected')
-    print('do you want to analyze sweeps manually? ')
-    sweeps_to_analyze = list(simpledialog.askstring('Sweeps', 'Please enter sweep numbers to analyze in list format [21, 23 , etc]'))
+# else:
+#     print('analysis has stopped no correct protocol selected')
+#     print('do you want to analyze sweeps manually? ')
+#     sweeps_to_analyze = list(simpledialog.askstring('Sweeps', 'Please enter sweep numbers to analyze in list format [21, 23 , etc]'))
     
 
 fig,ax = plt.subplots(3,1, sharex=True)     
@@ -160,7 +160,7 @@ average = np.mean(average_list, axis=0)
 average_dvdt = np.mean(average_list_dvdt, axis=0)
 ax[1].plot(sweep.t*1e3, average, color='red')
 ax[2].plot(sweep.t*1e3, average_dvdt, color='red')
-
+tkinter.messagebox.showinfo('average tracing', message='press OK to continue event analysis')
 #%%detect average events per set 
 fig,ax = plt.subplots(3,1, sharex=True)     
 ax[0].plot(sweep.t*1e3, ttl, color='k')
@@ -183,13 +183,13 @@ for j in range(0,len(peaks_ttl)):
     aoi = average_dvdt[left_border:right_border]
     aoi2_v = average[left_border:(right_border+20000)]
     aoi2_t = t[left_border:right_border2]
-    threshold = int(input("Please provide derravitve threshold for event detection: "))
+    threshold = tkinter.simpledialog.askinteger('threshold detection', 'please provide derrivative threshold of event detection')
     new_onset = 'f'
     if threshold > max(aoi):
         print('dvdt does not exceed threshold, please change thershold')
         print('max aoi is do not exceed this value again', max(aoi))
         while new_onset == 'f':
-            threshold = int(input("Please provide derravitve threshold for event detection: "))
+            threshold = tkinter.simpledialog.askinteger('threshold detection', 'please provide derrivative threshold of event detection')
             onset_index = np.where(aoi>threshold)[0][0] 
             ax[1].plot(t[left_border:right_border][onset_index], average[left_border:right_border][onset_index], 'x')
             peak_temp, nonsense = find_peaks(aoi2_v, prominence=.3)
@@ -218,16 +218,13 @@ for j in range(0,len(peaks_ttl)):
             #amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
             """
             
-            #plot 
+            #plot and save ris time
             ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'b')
             rise10_90 = t[left_border:right_border2][amp_90_x] - t[left_border:right_border2][amp_10_x]
-            
-            print('printing new onset, press a button to continue')
-            while True:
-                if plt.waitforbuttonpress():
-                    break 
-            new_onset = input('New onset good? (p/f)')
-            qc = input('Does the event qc pass? ')
+            #refresh plot
+            fig.canvas.draw()    
+            new_onset = tkinter.simpledialog.askstring('threshold detection', 'does the onset pass ? (p/f)')
+            qc = tkinter.simpledialog.askstring('threshold detection', 'does theevent pass QC ? (p/f)')
             qc_list.append(qc)
             onsets.append(t[left_border:right_border][onset_index]-t[peaks_ttl[j]])
             pulse_number.append(j)
@@ -269,13 +266,12 @@ for j in range(0,len(peaks_ttl)):
             #plot 
             ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'b')
             rise10_90 = t[left_border:right_border2][amp_90_x] - t[left_border:right_border2][amp_10_x]
-            while True:
-                if plt.waitforbuttonpress():
-                    break 
-            onset = input('Onset good? (p/f)')
+            #refresh plot
+            fig.canvas.draw()
+            onset = tkinter.simpledialog.askstring('threshold detection', 'does the onset pass ? (p/f)')
             if onset == 'f':
-                threshold = int(input("Please provide derravitve threshold for event detection: "))
-        qc = input('Does the event qc pass? ')
+                threshold = tkinter.simpledialog.askinteger('threshold detection', 'please provide derrivative threshold of event detection')
+        qc = tkinter.simpledialog.askstring('threshold detection', 'does theevent pass QC ? (p/f)')
         onsets.append(t[left_border:right_border][onset_index]-t[peaks_ttl[j]])
         pulse_number.append(j)
         rise_0_100.append(rise0_100)
@@ -283,7 +279,7 @@ for j in range(0,len(peaks_ttl)):
         qc_list.append(qc)
         amplitude.append(amp)
 onsets_df = pd.DataFrame(onsets)
-onsets_df['condition'] = condition
+onsets_df['condition'] = cond
 onsets_df['file_name'] = f.filename
 onsets_df['species']   = species
 onsets_df['n_pulse']   = pulse_number

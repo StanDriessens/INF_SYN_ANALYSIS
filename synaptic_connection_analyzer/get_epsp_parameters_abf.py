@@ -14,6 +14,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox as mb
 import pandas as pd 
+from fit_decay import fit_decay
 
 def get_epsp_parameters_spikes_exc(post_syn_x, post_syn_y, results,  dvdt, ax, fig):
     stdev = np.std(dvdt)
@@ -26,10 +27,13 @@ def get_epsp_parameters_spikes_exc(post_syn_x, post_syn_y, results,  dvdt, ax, f
     rise_time_100 = []
     rise_time_90  = []
     root = Tk()
+    decay = []
     for j in range(0,len(results)):
         left_border = results.iloc[j].upstroke_index-10
+        #onset
         right_border =  results.iloc[j].upstroke_index+400
         right_border2 = right_border + 2000
+        right_border3 = int(right_border + 8e3)
         aoi = dvdt[left_border:right_border]
         #find the point where dvdt exceeds 30 mv/ms
         if max(aoi) >= threshold:
@@ -50,7 +54,9 @@ def get_epsp_parameters_spikes_exc(post_syn_x, post_syn_y, results,  dvdt, ax, f
             #plot and get 10 - 90 % rise time 
             ax[1].plot(post_syn_x[left_border:right_border2][amp_10_x:amp_90_x], post_syn_y[left_border:right_border2][amp_10_x:amp_90_x], color = 'cyan')
             rise10_90 = post_syn_x[left_border:right_border2][amp_90_x] - post_syn_y[left_border:right_border2][amp_10_x]
-            #ask for user input regarding the events 
+            #plot and get decat decay area
+            ax[1].plot(post_syn_x[left_border:right_border3][amplitude_time:right_border3], post_syn_y[left_border:right_border3][amplitude_time:right_border3], color='magenta')
+            tau = fit_decay(left_border, right_border3, post_syn_y, post_syn_x)
             fig.canvas.draw()    
             root.deiconify()
             pass_fail = simpledialog.askstring('threshold detection', 'does the onset pass ? (p/f)', parent=root)
@@ -61,12 +67,16 @@ def get_epsp_parameters_spikes_exc(post_syn_x, post_syn_y, results,  dvdt, ax, f
                 qc.append('pass')
                 rise_time_100.append(rise0_100)
                 rise_time_90.append(rise10_90)
+                decay.append(tau)
+
             elif pass_fail == 'f':
                time_onset.append((post_syn_x[left_border:right_border][epsp_onset] - results.iloc[j].upstroke_t)*1e3)
                amplitude.append(max(post_syn_y[left_border:right_border])-post_syn_y[left_border:right_border][epsp_onset])
                qc.append('fail')
                rise_time_100.append(rise0_100)
                rise_time_90.append(rise10_90)
+               decay.append(tau)
+
         else:
             messagebox.showinfo(title='no event', message = 'no event exceeding threshold found')
             time_onset.append(None)
@@ -77,7 +87,7 @@ def get_epsp_parameters_spikes_exc(post_syn_x, post_syn_y, results,  dvdt, ax, f
             
 
     plt.close()
-    Time_Onset = {'latency':time_onset, 'amplitude':amplitude, 'qc':qc, 'rise_time_0_100': rise_time_100, 'rise_time_10_90': rise_time_90}   
+    Time_Onset = {'latency':time_onset, 'amplitude':amplitude, 'qc':qc, 'rise_time_0_100': rise_time_100, 'rise_time_10_90': rise_time_90, 'tau': decay}   
     time_onset = pd.DataFrame(Time_Onset)
     return time_onset
     
@@ -147,4 +157,4 @@ def get_epsp_parameters_spikes_inh(post_syn_x, post_syn_y, results,  dvdt, ax, f
     time_onset = pd.DataFrame(Time_Onset)
     return time_onset
     
-    
+

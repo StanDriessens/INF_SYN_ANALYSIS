@@ -47,6 +47,7 @@ from tkinter import Radiobutton
 from tkinter import simpledialog
 from nwb_ttl import run_nwb_ttl_analyzer
 from abf_spike import run_abf_spike_analyzer
+from abf_spike import run_abf_spike_analyzer_average
 
  
 plt.style.use('dark_background')
@@ -100,13 +101,18 @@ okay_button.pack(pady=10)
 window3.mainloop()    
 
 
-if file_type == 'nwb':
+window4= Tk() 
+average = messagebox.askyesno('average', 'Do you want to analyze an average trace?')
+
+
+if (average == True) and (file_type == 'abf'):
+    run_abf_spike_analyzer_average(file, species, connection)
+
+elif file_type == 'nwb':
     run_nwb_ttl_analyzer(file, species, connection)
     
 elif file_type == 'abf':
     run_abf_spike_analyzer(file, species, connection)
 
-#ask save directory
 
 
-    

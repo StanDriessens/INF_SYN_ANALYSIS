@@ -11,9 +11,11 @@ import os
 from pathlib import Path
 import seaborn as sns
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
 #%%load in the data 
-path_recov = r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\human\control'
+path_recov = r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\new_tool\human\control'
 files = Path(path_recov).glob('*.csv')
 # load in the files
 dfs = list()
@@ -24,7 +26,7 @@ for f in files:
 df_human_control = pd.concat(dfs, ignore_index=True)
 df_human_control['condition'] = 'control'
 
-path_recov = r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\human\zd'
+path_recov = r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\new_tool\human\zd'
 files = Path(path_recov).glob('*.csv')
 # load in the files
 dfs = list()
@@ -35,7 +37,7 @@ for f in files:
 df_human_zd = pd.concat(dfs, ignore_index=True)
 df_human_zd['condition'] = 'zd'
 
-path_recov = r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\mouse\control'
+path_recov = r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\new_tool\mouse\control'
 files = Path(path_recov).glob('*.csv')
 # load in the files
 dfs = list()
@@ -46,7 +48,7 @@ for f in files:
 df_mouse_control = pd.concat(dfs, ignore_index=True)
 df_mouse_control['condition'] = 'control'
 
-path_recov = r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\mouse\zd'
+path_recov = r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\new_tool\mouse\zd'
 files = Path(path_recov).glob('*.csv')
 # load in the files
 dfs = list()
@@ -71,7 +73,7 @@ metadata['distance'] = metadata['x_dif'] + metadata['y_dif']
 
 #merge metadta with the ephys data
 
-df_merge = pd.merge(df_total_pass, metadata, on='file') 
+df_merge = pd.merge(df_total, metadata, on='file') 
 
 #calculate uM/ms 
 
@@ -251,3 +253,61 @@ plt.tick_params(width=4)
 import pingouin as pg 
 
 pg.mwu(df_control_total[df_control_total['species_x']=='human'].speed, df_control_total[df_control_total['species_x']=='mouse'].speed)
+
+
+
+#%%plot the decay and rise times 
+df_total.tau = (1/df_total.tau)/500000
+
+df_total.tau = df_total.tau*1e3
+df_total.rise_time_0_100 = df_total.rise_time_0_100*1e3
+df_total.rise_time_10_90 = df_total.rise_time_10_90*1e3
+
+#plot
+df_human = df_total[df_total['species'] == 'human']
+df_mouse = df_total[df_total['species'] == 'mouse']
+
+human_data = df_human.groupby(['file', 'condition', 'layer']).mean().reset_index()
+mouse_data = df_mouse.groupby(['file', 'condition', 'layer']).mean().reset_index()
+
+
+human_data.rise_time_10_90 = human_data.rise_time_10_90 *1e3
+human_data.rise_time_0_100 = human_data.rise_time_0_100 *1e3
+
+
+
+mouse_data.rise_time_10_90 = mouse_data.rise_time_10_90 *1e3
+mouse_data.rise_time_0_100 = mouse_data.rise_time_0_100 *1e3
+
+human_data = mouse_data
+
+human_data = human_data[human_data['tau'] < 150]
+
+unique_files = np.unique(human_data.file)
+for file in unique_files:
+    file_data = human_data[human_data['file'] == file]
+    sns.lineplot(data=file_data, x='condition', y='tau', marker='o', linewidth =5,
+                 dashes=True, markers=True, linestyle='--', markersize=20)
+plt.ylabel('Tau', fontsize=20)
+#plt.ylim(2.0, 6.0)
+plt.yticks(fontsize=20)
+plt.xticks(fontsize=20)
+plt.xlabel('condition', fontsize=20)
+plt.tick_params(length=8)
+plt.tick_params(width=4)
+
+plt.figure(figsize=(15,25))
+    
+unique_files = human_data['file_name'].unique()
+
+#%% all data
+
+sns.lineplot(data=human_data, x='condition', y='tau', marker='o', linewidth =5,
+             dashes=True, markers=True, linestyle='--', markersize=20, errorbar=(None))
+plt.ylabel('Tau', fontsize=20)
+plt.ylim(20, 55)
+
+
+
+
+

@@ -42,13 +42,13 @@ from tkinter import filedialog
 from tkinter import messagebox as mb
 from tkinter import Radiobutton
 from tkinter import simpledialog
-    
+from get_epsp_parameters_abf_new import get_epsp_parameters_ttl_exc
+  
 def run_nwb_ttl_analyzer(file, species):
     #load in the dataset 
     print('loading dataset')
     dataset= create_ephys_data_set(file)
     all_sweeps = dataset.filtered_sweep_table()
-    
     
     #get the correct sweep name from tkinter button
     sets_unique = list(np.unique(all_sweeps.stimulus_code))
@@ -66,6 +66,7 @@ def run_nwb_ttl_analyzer(file, species):
 
     window2.mainloop()
 
+    print(cond)
     
     print('fetching TTL data')
     #where is TTL??
@@ -82,7 +83,7 @@ def run_nwb_ttl_analyzer(file, species):
     selected_TTLs = data_TTL[data_TTL['ttl'].str.contains('|'.join(strings))].reset_index(drop=True)
     #select sweeps to analyze
     
-    if 'control' in cond or 'test':
+    if 'ZD' not in cond:
         ttl_accept = []
         sweeps_to_analyze = []
         for i in selected_TTLs.ttl:
@@ -151,9 +152,9 @@ def run_nwb_ttl_analyzer(file, species):
     #%%detect average events per set 
     fig,ax = plt.subplots(3,1, sharex=True)
     fig.set_size_inches(12,6)     
-    ax[0].plot(sweep.t*1e3, ttl, color='w')
-    ax[1].plot(sweep.t*1e3, average, color='w')
-    ax[2].plot(sweep.t*1e3, average_dvdt, color='w')
+    ax[0].plot(sweep.t, ttl, color='w')
+    ax[1].plot(sweep.t, average, color='w')
+    ax[2].plot(sweep.t, average_dvdt, color='w')
     ax[2].set_ylim(-1000, 1000)
     peaks_ttl, nonesne = find_peaks(ttl, 1) 
     t=sweep.t*1e3
@@ -164,121 +165,16 @@ def run_nwb_ttl_analyzer(file, species):
     rise_0_100 = []
     rise_10_90 = []
     amplitude  = []
-    for j in range(0,len(peaks_ttl)):
-        left_border = peaks_ttl[j]+1000
-        right_border =  peaks_ttl[j]+5000
-        right_border2 = right_border+20000
-        aoi = average_dvdt[left_border:right_border]
-        aoi2_v = average[left_border:(right_border+20000)]
-        aoi2_t = t[left_border:right_border2]
-        threshold = tkinter.simpledialog.askinteger('threshold detection', 'please provide derrivative threshold of event detection')
-        new_onset = 'f'
-        if threshold > max(aoi):
-            print('dvdt does not exceed threshold, please change thershold')
-            print('max aoi is do not exceed this value again', max(aoi))
-            while new_onset == 'f':
-                threshold = tkinter.simpledialog.askinteger('threshold detection', 'please provide derrivative threshold of event detection')
-                onset_index = np.where(aoi>threshold)[0][0] 
-                ax[1].plot(t[left_border:right_border][onset_index], average[left_border:right_border][onset_index], 'x')
-                peak_temp, nonsense = find_peaks(aoi2_v, prominence=.3)
-                ax[1].plot(t[left_border:right_border2][peak_temp], average[left_border:right_border2][peak_temp], 'x')
-                #plot rise times (0-100%)
-                #adjust rise time so we take 10-90% of maxium in V not t. 
-                amp = average[left_border:right_border2][peak_temp] - average[left_border:right_border][onset_index]
-                amp_10 = average[left_border:right_border][onset_index] + 0.1*amp
-                amp_90 = average[left_border:right_border2][onset_index] + 0.9*amp 
-                #cooridanted of amp_10 - ampg_90
-                amp_10_x = np.where(average[left_border:right_border] > amp_10)[0][0]
-                amp_90_x = np.where(average[left_border:right_border2] > amp_90)[0][0]
-                
-                #plot total rise time
-                ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]], color = 'r')
-                rise0_100  =  t[left_border:right_border2][peak_temp[0]]- t[left_border:right_border2][onset_index]
-                """
-                code below assumed 10 - 90 % of time not the time 10%90% of amplitude 
-                
-                #plot rise time (10 - 90%)
-                #total_rise = t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]]
-                #index_start = int(.1*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
-                #index_end   = int(.9*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
-                #ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], average[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], color = 'b')
-                #rise10_90 = t[left_border:right_border2][onset_index:peak_temp[0]][index_end] - t[left_border:right_border2][onset_index:peak_temp[0]][index_start]
-                #amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
-                """
-                
-                #plot and save ris time
-                ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'lime')
-                rise10_90 = t[left_border:right_border2][amp_90_x] - t[left_border:right_border2][amp_10_x]
-                #refresh plot
-                fig.canvas.draw()    
-                new_onset = tkinter.simpledialog.askstring('threshold detection', 'does the onset pass ? (p/f)')
-                qc = tkinter.simpledialog.askstring('threshold detection', 'does theevent pass QC ? (p/f)')
-                qc_list.append(qc)
-                onsets.append(t[left_border:right_border][onset_index]-t[peaks_ttl[j]])
-                pulse_number.append(j)
-                rise_0_100.append(rise0_100)
-                rise_10_90.append(rise10_90)
-                amplitude.append(amp)
-                print('analyzing event, press a button to continue')
-        elif threshold < max(aoi):
-            onset = 'f'
-            while onset == 'f':
-                onset_index = np.where(aoi>threshold)[0][0] 
-                ax[1].plot(t[left_border:right_border][onset_index], average[left_border:right_border][onset_index], 'x')
-                onset_index = np.where(aoi>threshold)[0][0] 
-                ax[1].plot(t[left_border:right_border][onset_index], average[left_border:right_border][onset_index], 'x')
-                peak_temp, nonsense = find_peaks(aoi2_v, prominence=.3)
-                ax[1].plot(t[left_border:right_border2][peak_temp], average[left_border:right_border2][peak_temp], 'x')
-                amp = average[left_border:right_border2][peak_temp] - average[left_border:right_border][onset_index]
-                amp_10 = average[left_border:right_border][onset_index] + 0.1*amp
-                amp_90 = average[left_border:right_border2][onset_index] + 0.9*amp 
-                #cooridanted of amp_10 - ampg_90
-                amp_10_x = np.where(average[left_border:right_border] > amp_10)[0][0]
-                amp_90_x = np.where(average[left_border:right_border2] > amp_90)[0][0]
-                
-                #plot total rise time
-                ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]], color = 'r')
-                rise0_100  =  t[left_border:right_border2][peak_temp[0]]- t[left_border:right_border2][onset_index]
-                """
-                code below assumed 10 - 90 % of time not the time 10%90% of amplitude 
-                
-                #plot rise time (10 - 90%)
-                #total_rise = t[left_border:right_border2][onset_index:peak_temp[0]], average[left_border:right_border2][onset_index:peak_temp[0]]
-                #index_start = int(.1*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
-                #index_end   = int(.9*len(t[left_border:right_border2][onset_index:peak_temp[0]]))
-                #ax[1].plot(t[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], average[left_border:right_border2][onset_index:peak_temp[0]][index_start:index_end], color = 'b')
-                #rise10_90 = t[left_border:right_border2][onset_index:peak_temp[0]][index_end] - t[left_border:right_border2][onset_index:peak_temp[0]][index_start]
-                #amp       = average[left_border:right_border2][onset_index:peak_temp[0]][index_end] -  average[left_border:right_border2][onset_index:peak_temp[0]][index_start]
-                """
-                
-                #plot 
-                ax[1].plot(t[left_border:right_border2][amp_10_x:amp_90_x], average[left_border:right_border2][amp_10_x:amp_90_x], color = 'lime')
-                rise10_90 = t[left_border:right_border2][amp_90_x] - t[left_border:right_border2][amp_10_x]
-                #refresh plot
-                fig.canvas.draw()
-                onset = tkinter.simpledialog.askstring('threshold detection', 'does the onset pass ? (p/f)')
-                if onset == 'f':
-                    threshold = tkinter.simpledialog.askinteger('threshold detection', 'please provide derrivative threshold of event detection')
-            qc = tkinter.simpledialog.askstring('threshold detection', 'does theevent pass QC ? (p/f)')
-            onsets.append(t[left_border:right_border][onset_index]-t[peaks_ttl[j]])
-            pulse_number.append(j)
-            rise_0_100.append(rise0_100)
-            rise_10_90.append(rise10_90)
-            qc_list.append(qc)
-            amplitude.append(amp)
-            onsets_df = pd.DataFrame(onsets)
-            onsets_df['condition'] = cond
-            onsets_df['file_name'] = f.filename
-            onsets_df['species']   = species
-            onsets_df['n_pulse']   = pulse_number
-            onsets_df['qc']        = qc_list
-            onsets_df['rise']      = rise_0_100
-            onsets_df['rise%10_90']= rise_10_90
-            onsets_df['amplitude'] = amplitude
+    
+    post_syn_x = sweep.t
+    post_syn_y = average
+    
+    time_onset = get_epsp_parameters_ttl_exc(post_syn_x=post_syn_x, post_syn_y=post_syn_y, peaks_ttl=peaks_ttl,
+                                         average_dvdt=average_dvdt, ax=ax, fig=fig)
 
-# if species == 'human':
-#     save_name = f.filename[82:101]+'.csv'
-#     onsets_df.to_csv(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\\' + save_name)
-# elif species == 'mouse':
-#     save_name = f.filename[77:102]+'.csv'
-#     onsets_df.to_csv(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\\' + save_name)
+    if species == 'human':
+        save_name = f.filename[82:101]+'.csv'
+        time_onset.to_csv(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\\' + save_name)
+    elif species == 'mouse':
+         save_name = f.filename[77:102]+'.csv'
+         time_onset.to_csv(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\\' + save_name)

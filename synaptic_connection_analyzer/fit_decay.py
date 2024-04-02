@@ -10,15 +10,14 @@ import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
-def fit_decay(left_border, right_border3, post_syn_y, post_syn_x):
-    def exponential_decay(t, A, tau, C):
-        return A*np.exp(-t/tau) + C
+def fit_decay(amplitude_time, left_border, right_border3, post_syn_y, post_syn_x):
+    def exponential_decay(x, m, t, b):
+        return m*np.exp(-t*x) + b
         
     #FIND THE MAXIMUM IN THE CURRENT PLOT 
-    max_index = np.where(post_syn_y[int(left_border):int(right_border3)] == max(post_syn_y[int(left_border):int(right_border3)]))[0][0] + left_border
-    t_data = post_syn_x[max_index:int(right_border3)]
-    response_data = post_syn_y[max_index:int(right_border3)]
-    initial_guess = (0.4, 0.150, -69.1)
+    response_data = post_syn_y[left_border:right_border3][amplitude_time:right_border3]
+    t_data = np.arange(0 , len(response_data),1)
+    initial_guess = (2000, .1, 50)
     params, covariance = curve_fit(exponential_decay, t_data, response_data, p0=initial_guess, maxfev=4000)
     decay_time_constant = params[1]
     plt.figure()

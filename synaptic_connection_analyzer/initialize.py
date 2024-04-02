@@ -102,14 +102,15 @@ window3.mainloop()
 
 
 window4= Tk() 
-average = messagebox.askyesno('average', 'Do you want to analyze an average trace?')
+average = mb.askyesno('average', 'Do you want to analyze an average trace?')
+window4.destroy()
 
 
 if (average == True) and (file_type == 'abf'):
     run_abf_spike_analyzer_average(file, species, connection)
 
 elif file_type == 'nwb':
-    run_nwb_ttl_analyzer(file, species, connection)
+    run_nwb_ttl_analyzer(file, species)
     
 elif file_type == 'abf':
     run_abf_spike_analyzer(file, species, connection)

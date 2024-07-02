@@ -178,3 +178,34 @@ def run_nwb_ttl_analyzer(file, species):
     elif species == 'mouse':
          save_name = f.filename[77:102]+'.csv'
          time_onset.to_csv(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\\' + save_name)
+         
+def multipatch_nwb_analyzer(folder_path, filename): 
+ #get channels 
+    f = h5py.File(folder_path + '/' + filename, 'r')
+    channels = set()
+    for sweep in f_sweeps['sweeps']:
+        channel = sweep.split('_')[-1]
+        channels.add(channel)
+        
+    #some tkinter code for GUI experience 
+    def save_selected_value():
+        global cond
+        cond = sets_unique[x.get()]
+        window3.destroy()
+    window3 = Tk()
+    x = IntVar()
+    for index in range(len(channels)):
+        radiobutton = Radiobutton(window2, text=sets_unique[index], variable=x, value=index, padx = 25)
+        radiobutton.pack(anchor=W)
+        okay_button = Button(window2, text="Select Pre Synaotic Channel", command=save_selected_value)
+        okay_button.pack(pady=10)    
+    window4 =Tk()
+    x = IntVar()
+    for index in range(len(channels)):
+        radiobutton = Radiobutton(window2, text=sets_unique[index], variable=x, value=index, padx = 25)
+        radiobutton.pack(anchor=W)
+        okay_button = Button(window2, text="Select Post Synaotic Channel", command=save_selected_value)
+        okay_button.pack(pady=10)    
+    
+     
+     

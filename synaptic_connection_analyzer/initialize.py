@@ -105,12 +105,30 @@ window4= Tk()
 average = mb.askyesno('average', 'Do you want to analyze an average trace?')
 window4.destroy()
 
+connection_types = ['multipatch', 'no multipatch']
+def select_connection():
+    global connection
+    connection = connection_types[x.get()]
+    window3.destroy()
+window5 = Tk()
+x = IntVar()
+for index in range(len(connection_types)):
+    radiobutton = Radiobutton(window3, text=connection_types[index], variable=x, value=index, padx=25)
+    radiobutton.pack(anchor=W)
+okay_button = Button(window3, text="Select connection", command=select_connection)
+okay_button.pack(pady=10)    
+window5.mainloop()  
+
+
+
 
 if (average == True) and (file_type == 'abf'):
     run_abf_spike_analyzer_average(file, species, connection)
-
 elif file_type == 'nwb':
     run_nwb_ttl_analyzer(file, species)
+    
+elif (file_type == 'nwb') and (multipatch == 'yes'):
+    multipatch_nwb_analyzer(file, species, multipatch, connection)
     
 elif file_type == 'abf':
     run_abf_spike_analyzer(file, species, connection)

@@ -43,7 +43,11 @@ from tkinter import messagebox as mb
 from tkinter import Radiobutton
 from tkinter import simpledialog
 from get_epsp_parameters_abf_new import get_epsp_parameters_ttl_exc
-  
+from get_epsp_parameters_abf_new import get_epsp_parameters_spikes_inh
+from get_epsp_parameters_abf_new import get_epsp_parameters_spikes_exc 
+from scipy.signal import savgol_filter
+
+
 def run_nwb_ttl_analyzer(file, species):
     #load in the dataset 
     print('loading dataset')
@@ -179,7 +183,7 @@ def run_nwb_ttl_analyzer(file, species):
     elif species == 'mouse':
          save_name = f.filename[77:102]+'.csv'
          time_onset.to_csv(r'C:\Users\sdr267\Documents\PhD\ProjectSynapticConnections\Ih_experiment\events\\' + save_name)
-#%%          
+         
 def multipatch_nwb_analyzer(file, connection): 
     #load the file and make the sweep table 
     f = h5py.File(file, 'r')
@@ -382,7 +386,7 @@ def multipatch_nwb_analyzer(file, connection):
         
     v_pre_tot = []
     v_post_tot = []    
-    fig,ax = plt.subplots(4,1, sharex=True)
+    fig,ax = plt.subplots(3,1, sharex=True)
     for i in sweep_tab_pre.sweep_number: 
         #get pre sweep
         key_pre = sweep_tab_pre[sweep_tab_pre['sweep_number'] == i].sweep_file_name.reset_index()
@@ -399,21 +403,49 @@ def multipatch_nwb_analyzer(file, connection):
         # to consturct the time array we need
         # sample rate 
         # length of the array 
-        
         t = np.arange(0, len(f['acquisition'][key_pre.sweep_file_name[0]]['data'])) / f['acquisition'][key_pre.sweep_file_name[0]]['starting_time'].attrs['rate']
         #use ipffx to detect spikes in the sweeps 
         if max(v_pre) < 100:
-            ax[0].plot(t, v_pre, color='w')
-            ax[1].plot(t, v_post, color='w')
+            # ax[0].plot(t, v_pre, color='w')
+            # ax[1].plot(t, v_post, color='w')
             #append arrays for averaging 
             v_pre_tot.append(v_pre)
             v_post_tot.append(v_post)
             #create average 
     average_pre = np.mean(v_pre_tot, axis=0)
     average_post = np.mean(v_post_tot, axis=0)
+    
+    #filter the average 
+    
+    average_post = savgol_filter(average_post, 251 ,2)
     #plot average 
-    ax[2].plot(t, average_pre)
-    ax[3].plot(t, average_post)
+    ax[0].plot(t, average_pre)
+    ax[1].plot(t, average_post)
+    dv = np.gradient(average_post, edge_order = 1)
+    dt = np.gradient(t, edge_order=1)
+    dvdt = dv/dt
+    ax[2].plot(t, dvdt)
+    #here get the requiered data for PSP feature extraction 
+    #derravitive for thersholding
+ 
+    #spikes for onset
+    ext = SpikeFeatureExtractor()
+    I = t 
+    results = ext.process(t, average_pre, I)
+    #run the PSP analyzers 
+    if connection == 'inh':
+        time_onset = get_epsp_parameters_spikes_inh(t, average_post, results, dvdt, ax, fig)
+    elif connection =='exc':
+        time_onset = get_epsp_parameters_spikes_exc(t, average_post, results, dvdt, ax, fig)
+        
+    return time_onset
+    
+    
+    
+    
+    
+    
+    
         
             
         

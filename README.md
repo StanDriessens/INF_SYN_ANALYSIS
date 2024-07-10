@@ -6,11 +6,11 @@ Analysis toolbox for synpatic connections
 Run the intialize.py from the synaptic_analyzer folder to start.
 
 Some dependencies are: 
-tkinter
-pandas
-numpy 
-scipy
-h5py
-IPFX (https://github.com/AllenInstitute/ipfx) 
+- tkinter
+- pandas
+- numpy 
+- scipy
+- h5py
+- IPFX (https://github.com/AllenInstitute/ipfx) 
 
 

@@ -384,6 +384,7 @@ def multipatch_nwb_analyzer(file, connection):
         print('sweeps foud analyzing')
         
         
+        
     v_pre_tot = []
     v_post_tot = []    
     fig,ax = plt.subplots(3,1, sharex=True)

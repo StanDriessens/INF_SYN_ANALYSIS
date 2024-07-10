@@ -14,3 +14,4 @@ Some dependencies are:
 - IPFX (https://github.com/AllenInstitute/ipfx) 
 
 
+![image](https://github.com/StanDriessens/INF_SYN_ANALYSIS/assets/24521084/0cea1726-eaf9-43c3-b8f8-6bb0a5ac2a96)

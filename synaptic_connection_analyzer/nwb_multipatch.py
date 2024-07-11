@@ -295,4 +295,14 @@ def multipatch_nwb_analyzer(file, connection):
     elif connection =='exc':
         time_onset = get_epsp_parameters_spikes_exc(t, average_post, results, dvdt, ax, fig)
         
+        
+    #save the data 
+    #file     
+    window10 = Tk()
+    save_folder = filedialog.askdirectory()
+    path = file
+    filename = os.path.basename(path)
+    time_onset.to_csv(save_folder + '/' + filename + '_' + 'analyzed' + '.csv')
+
+        
     return time_onset

@@ -38,7 +38,7 @@ from get_epsp_parameters_abf_new import get_epsp_parameters_ttl_exc
 from get_epsp_parameters_abf_new import get_epsp_parameters_spikes_inh
 from get_epsp_parameters_abf_new import get_epsp_parameters_spikes_exc 
 from scipy.signal import savgol_filter
-
+from inspect_select_traces import inspect_select_traces
 
 def multipatch_nwb_analyzer(file, connection): 
     #load the file and make the sweep table 
@@ -238,13 +238,18 @@ def multipatch_nwb_analyzer(file, connection):
     check = set( sweep_tab_pre.sweep_number) ==  set(sweep_tab_post.sweep_number)
     if check ==True:
         print('sweeps foud analyzing')
-        
+    
+    #include exclude sweeps 
+    
+    sweeps_inc = inspect_select_traces(f, sweep_tab_pre, sweep_tab_post)
+    
+    
         
         
     v_pre_tot = []
     v_post_tot = []    
     fig,ax = plt.subplots(3,1, sharex=True)
-    for i in sweep_tab_pre.sweep_number: 
+    for i in sweeps_inc: 
         #get pre sweep
         key_pre = sweep_tab_pre[sweep_tab_pre['sweep_number'] == i].sweep_file_name.reset_index()
         v_pre = np.array(f['acquisition'][key_pre.sweep_file_name[0]]['data'])

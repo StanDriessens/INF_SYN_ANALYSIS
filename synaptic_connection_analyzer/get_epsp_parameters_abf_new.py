@@ -20,7 +20,7 @@ from fit_decay import fit_decay
 def get_epsp_parameters_spikes_exc(post_syn_x, post_syn_y, results,  dvdt, ax, fig):
     stdev = np.std(dvdt)
     ax[2].axhline(y = (np.mean(dvdt) + 3*stdev), color = 'r', linestyle = '--')
-    threshold = 3*stdev 
+    threshold = 1*stdev 
     time_onset = []
     amplitude  = []
     qc         = []

@@ -3,11 +3,13 @@
 Created on Mon Jan  8 15:27:14 2024
 
 
-Initialize synaptic data analyzer
+INF Synaptic Response analyzer 
 
-prior to nwb ttl - synaptic or abf ttl synapic connection data. 
-
-
+compatible with: 
+    
+nwbv2 TTL -> Repsonse
+nwbv2 multipatch 
+ABV   multipatch 
 Stan Driessens 2024/01/08 
 
 Note make sure you are in the correct directory when running the script. 
@@ -46,7 +48,7 @@ from tkinter import messagebox as mb
 from tkinter import Radiobutton
 from tkinter import simpledialog
 from nwb_ttl import run_nwb_ttl_analyzer
-from nwb_ttl import multipatch_nwb_analyzer
+from nwb_multipatch import multipatch_nwb_analyzer
 from abf_spike import run_abf_spike_analyzer
 from abf_spike import run_abf_spike_analyzer_average
 

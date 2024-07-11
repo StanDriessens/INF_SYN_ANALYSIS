@@ -104,10 +104,6 @@ okay_button.pack(pady=10)
 window3.mainloop()    
 
 
-window4= Tk() 
-average = mb.askyesno('average', 'Do you want to analyze an average trace?')
-window4.destroy()
-
 connection_types = ['multipatch', 'no multipatch']
 def select_connection():
     global multipatch
@@ -122,19 +118,24 @@ okay_button = Button(window5, text="Select multipatch", command=select_connectio
 okay_button.pack(pady=10)    
 window5.mainloop()  
 
+#call the correct function 
+if file_type =='abf':
+    window4= Tk() 
+    average = mb.askyesno('average', 'Do you want to analyze an average trace?')
+    window4.destroy()
+    
+    if average == True:
+        run_abf_spike_analyzer_average(file, species, connection)
+    elif average == False:
+        run_abf_spike_analyzer(file, species, connection)
 
 
-
-if (average == True) and (file_type == 'abf'):
-    run_abf_spike_analyzer_average(file, species, connection)
 elif (file_type == 'nwb') and (multipatch == 'no multipatch'):
     run_nwb_ttl_analyzer(file, species)
     
 elif (file_type == 'nwb') and (multipatch == 'multipatch'):
     multipatch_nwb_analyzer(file, connection)
     
-elif file_type == 'abf':
-    run_abf_spike_analyzer(file, species, connection)
 
 
 

@@ -64,6 +64,8 @@ def inspect_select_traces(f, sweep_tab_pre, sweep_tab_post):
         #plot the sweeps
         ax[0].plot(t, v_pre)
         ax[1].plot(t, v_post)
+        #add plt.pause() for  mac operating systems
+        plt.pause(1)
         #prompt for sweep acceptance 
         root = tkinter.Tk()
         include = tkinter.messagebox.askquestion(

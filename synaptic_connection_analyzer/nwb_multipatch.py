@@ -92,6 +92,8 @@ def multipatch_nwb_analyzer(file, connection):
         
     for i in f_stimulus_channel4.sweeps:
         stimulus_code_4.append(str(f['stimulus']['presentation'][i].attrs['stimulus_description']))
+        
+            
     
     
        
@@ -100,27 +102,33 @@ def multipatch_nwb_analyzer(file, connection):
     for sweep_name in f_stimulus_channel1.sweeps:
         stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
         stimulus_code_1.append(str(stimulus_description))
+    print('appended stimulus to channel 1', np.unique(stimulus_code_1))
     
     # Stimulus codes per channel 2
     stimulus_code_2 = []
     for sweep_name in f_stimulus_channel2.sweeps:
         stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
         stimulus_code_2.append(str(stimulus_description))
+    print('appended stimulus to channel 2', np.unique(stimulus_code_2))
+
     
     # Stimulus codes per channel 3
     stimulus_code_3 = []
     for sweep_name in f_stimulus_channel3.sweeps:
         stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
         stimulus_code_3.append(str(stimulus_description))
+    print('appended stimulus to channel 3', np.unique(stimulus_code_3))
+
     
     # Stimulus codes per channel 4
     stimulus_code_4 = []
     for sweep_name in f_stimulus_channel4.sweeps:
         stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
         stimulus_code_4.append(str(stimulus_description))
+    print('appended stimulus to channel 4', np.unique(stimulus_code_4))
+
         
-    # create the sweep table
-    # Channel 1
+   
     sweep_table_channel1 = pd.DataFrame({
        'sweep_file_name': f_sweeps_channel1.sweeps,
        'stim_file_name': f_stimulus_channel1.sweeps,
@@ -201,7 +209,7 @@ def multipatch_nwb_analyzer(file, connection):
         window8.destroy()
     window8 = Tk()
     x = IntVar()
-    for index in range(len(channels)):
+    for index in range(len(stimuli)):
         radiobutton = Radiobutton(window8, text=stimuli[index], variable=x, value=index, padx=25)
         radiobutton.pack(anchor=W)
     okay_button = Button(window8, text="Select pre stimulus", command=select_pre_stimulus)
@@ -214,7 +222,7 @@ def multipatch_nwb_analyzer(file, connection):
         window9.destroy()
     window9 = Tk()
     x = IntVar()
-    for index in range(len(channels)):
+    for index in range(len(stimuli)):
         radiobutton = Radiobutton(window9, text=stimuli[index], variable=x, value=index, padx=25)
         radiobutton.pack(anchor=W)
     okay_button = Button(window9, text="Select post stimulus", command=select_post_stimulus)

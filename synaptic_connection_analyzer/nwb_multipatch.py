@@ -54,113 +54,55 @@ def multipatch_nwb_analyzer(file, connection):
         channel = sweep.split('_')[-1]
         if channel not in channels:
             channels.append(channel)
-    
+    print('Channels found in file: ', channels)
     # Sort the list of channel names
+    
+    
     channels.sort()
-    channel_1 = list(channels)[0]
-    channel_2 = list(channels)[1]
-    channel_3 = list(channels)[2]
-    channel_4 = list(channels)[3]
-    f_sweeps_channel1 = f_sweeps[f_sweeps['sweeps'].str.contains(channel_1)].reset_index(drop=True)
-    f_sweeps_channel2 = f_sweeps[f_sweeps['sweeps'].str.contains(channel_2)].reset_index(drop=True)
-    f_sweeps_channel3 = f_sweeps[f_sweeps['sweeps'].str.contains(channel_3)].reset_index(drop=True)
-    f_sweeps_channel4 = f_sweeps[f_sweeps['sweeps'].str.contains(channel_4)].reset_index(drop=True)
+
     
-    #f_sweeps_channel1= f_sweeps[f_sweeps['sweeps'].str.contains('AD2')].reset_index(drop=True)
-    #f_sweeps_channel2 = f_sweeps[f_sweeps['sweeps'].str.contains(channel_2)].reset_index(drop=True)
+    # Dictionary to store sweeps and stimulus information
+    f_sweeps_channels = {}
+    stimulus_codes = {}
+    sweep_tables = []
+    
+    # Get stimulus information
     f_stimulus = pd.DataFrame(list(f['stimulus']['presentation'].keys()), columns=['sweeps'])
-    f_stimulus_channel1 = f_stimulus[f_stimulus['sweeps'].str.contains('DA0')].reset_index(drop=True)
-    f_stimulus_channel2 = f_stimulus[f_stimulus['sweeps'].str.contains('DA1')].reset_index(drop=True)
-    f_stimulus_channel3 = f_stimulus[f_stimulus['sweeps'].str.contains('DA2')].reset_index(drop=True)
-    f_stimulus_channel4 = f_stimulus[f_stimulus['sweeps'].str.contains('DA3')].reset_index(drop=True)
+    stimulus_channels = ['DA0', 'DA1', 'DA2', 'DA3']
+    f_stimulus_channels = {ch: f_stimulus[f_stimulus['sweeps'].str.contains(ch)].reset_index(drop=True) for ch in stimulus_channels}
     
-    # Initialize lists to store stimulus codes
-    stimulus_code_1 = []
-    stimulus_code_2 = []
-    stimulus_code_3 = []
-    stimulus_code_4 = []
-    
-    # Retrieve stimulus codes for each channel
-    for i in f_stimulus_channel1.sweeps:
-        stimulus_code_1.append(str(f['stimulus']['presentation'][i].attrs['stimulus_description']))
+    # Loop over available channels and populate the sweep and stimulus information
+    for idx, channel in enumerate(channels):
+        # Extract sweeps for this channel
+        f_sweeps_channel = f_sweeps[f_sweeps['sweeps'].str.contains(channel)].reset_index(drop=True)
+        f_sweeps_channels[channel] = f_sweeps_channel
         
-    for i in f_stimulus_channel2.sweeps:
-        stimulus_code_2.append(str(f['stimulus']['presentation'][i].attrs['stimulus_description']))
-        
-    for i in f_stimulus_channel3.sweeps:
-        stimulus_code_3.append(str(f['stimulus']['presentation'][i].attrs['stimulus_description']))
-        
-    for i in f_stimulus_channel4.sweeps:
-        stimulus_code_4.append(str(f['stimulus']['presentation'][i].attrs['stimulus_description']))
-        
-            
+        # Find the corresponding stimulus channel (e.g., DA0, DA1, ...)
+        stim_channel_name = f'DA{idx}'
+        f_stimulus_channel = f_stimulus_channels.get(stim_channel_name, pd.DataFrame(columns=['sweeps']))
     
+        # Retrieve stimulus codes for each sweep if the stimulus channel exists
+        stimulus_code = []
+        if not f_stimulus_channel.empty:
+            for sweep_name in f_stimulus_channel.sweeps:
+                stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
+                stimulus_code.append(str(stimulus_description))
+            stimulus_codes[stim_channel_name] = stimulus_code
     
-       
-        # Stimulus codes per channel 1
-    stimulus_code_1 = []
-    for sweep_name in f_stimulus_channel1.sweeps:
-        stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
-        stimulus_code_1.append(str(stimulus_description))
-    print('appended stimulus to channel 1', np.unique(stimulus_code_1))
+        # Only create the DataFrame if both sweep and stimulus data are available
+        if not f_sweeps_channel.empty and stimulus_code:
+            sweep_table_channel = pd.DataFrame({
+                'sweep_file_name': f_sweeps_channel.sweeps,
+                'stim_file_name': f_stimulus_channel.sweeps,
+                'stimulus_code': stimulus_code,
+                'channel': f'channel_{idx + 1}'
+            })
+            sweep_tables.append(sweep_table_channel)
+            print(f'Appended stimulus to {stim_channel_name}:', np.unique(stimulus_code))
     
-    # Stimulus codes per channel 2
-    stimulus_code_2 = []
-    for sweep_name in f_stimulus_channel2.sweeps:
-        stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
-        stimulus_code_2.append(str(stimulus_description))
-    print('appended stimulus to channel 2', np.unique(stimulus_code_2))
+    # Combine all sweep tables into a single DataFrame
+    sweep_table = pd.concat(sweep_tables, ignore_index=True) if sweep_tables else pd.DataFrame()
 
-    
-    # Stimulus codes per channel 3
-    stimulus_code_3 = []
-    for sweep_name in f_stimulus_channel3.sweeps:
-        stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
-        stimulus_code_3.append(str(stimulus_description))
-    print('appended stimulus to channel 3', np.unique(stimulus_code_3))
-
-    
-    # Stimulus codes per channel 4
-    stimulus_code_4 = []
-    for sweep_name in f_stimulus_channel4.sweeps:
-        stimulus_description = f['stimulus']['presentation'][sweep_name].attrs['stimulus_description']
-        stimulus_code_4.append(str(stimulus_description))
-    print('appended stimulus to channel 4', np.unique(stimulus_code_4))
-
-        
-   
-    sweep_table_channel1 = pd.DataFrame({
-       'sweep_file_name': f_sweeps_channel1.sweeps,
-       'stim_file_name': f_stimulus_channel1.sweeps,
-       'stimulus_code': stimulus_code_1,
-       'channel': 'channel_1'
-    })
-    
-    # Channel 2
-    sweep_table_channel2 = pd.DataFrame({
-       'sweep_file_name': f_sweeps_channel2.sweeps,
-       'stim_file_name': f_stimulus_channel2.sweeps,
-       'stimulus_code': stimulus_code_2,
-       'channel': 'channel_2'
-    })
-    
-    # Channel 3
-    sweep_table_channel3 = pd.DataFrame({
-       'sweep_file_name': f_sweeps_channel3.sweeps,
-       'stim_file_name': f_stimulus_channel3.sweeps,
-       'stimulus_code': stimulus_code_3,
-       'channel': 'channel_3'
-    })
-    
-    # Channel 4
-    sweep_table_channel4 = pd.DataFrame({
-       'sweep_file_name': f_sweeps_channel4.sweeps,
-       'stim_file_name': f_stimulus_channel4.sweeps,
-       'stimulus_code': stimulus_code_4,
-       'channel': 'channel_4'
-    })
-    
-    sweep_table = pd.concat([sweep_table_channel1, sweep_table_channel2, sweep_table_channel3, sweep_table_channel4], ignore_index=True)
     
     # Optionally, if you want to convert sweep_file_name and stim_file_name to string type
     sweep_table['stim_file_name'] = sweep_table['stim_file_name'].astype(str)
@@ -251,8 +193,6 @@ def multipatch_nwb_analyzer(file, connection):
     
     sweeps_inc = inspect_select_traces(f, sweep_tab_pre, sweep_tab_post)
     
-    
-        
         
     v_pre_tot = []
     v_post_tot = []    
@@ -279,8 +219,9 @@ def multipatch_nwb_analyzer(file, connection):
             # ax[0].plot(t, v_pre, color='w')
             # ax[1].plot(t, v_post, color='w')
             #append arrays for averaging 
-            v_pre_tot.append(v_pre)
-            v_post_tot.append(v_post)
+            if np.isnan(v_pre).any() == False:
+                v_pre_tot.append(v_pre)
+                v_post_tot.append(v_post)
             #create average 
     average_pre = np.mean(v_pre_tot, axis=0)
     average_post = np.mean(v_post_tot, axis=0)
@@ -301,7 +242,8 @@ def multipatch_nwb_analyzer(file, connection):
     #spikes for onset
     ext = SpikeFeatureExtractor()
     I = t 
-    results = ext.process(t, average_pre, I)
+    #results remain empty
+    results = ext.process(t=t, v=v_pre, i=I)
     #run the PSP analyzers 
     if connection == 'inh':
         time_onset = get_epsp_parameters_spikes_inh(t, average_post, results, dvdt, ax, fig)

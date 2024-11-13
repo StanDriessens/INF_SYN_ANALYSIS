@@ -12,7 +12,7 @@ import scipy as sp
 import matplotlib.pyplot as plt
 from tkinter import * 
 from tkinter import filedialog
-from tkinter import messagebox as mb
+from tkinter import messagebox
 from tkinter import simpledialog
 import pandas as pd 
 from fit_decay import fit_decay
@@ -84,6 +84,7 @@ def get_epsp_parameters_spikes_exc(post_syn_x, post_syn_y, results,  dvdt, ax, f
             qc.append(None)
             rise_time_100.append(None)
             rise_time_90.append(None)
+            decay.append(None)
             
 
     plt.close()

@@ -51,6 +51,7 @@ from nwb_ttl import run_nwb_ttl_analyzer
 from nwb_multipatch import multipatch_nwb_analyzer
 from abf_spike import run_abf_spike_analyzer
 from abf_spike import run_abf_spike_analyzer_average
+from run_nwb_SpikeFeats import run_nwb_SpikeFeats
 
  
 plt.style.use('dark_background')
@@ -118,6 +119,23 @@ okay_button = Button(window5, text="Select multipatch", command=select_connectio
 okay_button.pack(pady=10)    
 window5.mainloop()  
 
+
+Features = ['Cell Features', 'No Cell Features']
+def selectFeats():
+    global CellFeats
+    CellFeats = Features[x.get()]
+    window5.destroy()
+window5 = Tk()
+x = IntVar()
+for index in range(len(Features)):
+    radiobutton = Radiobutton(window5, text=Features[index], variable=x, value=index, padx=25)
+    radiobutton.pack(anchor=W)
+okay_button = Button(window5, text="Select CellFeats", command=selectFeats)
+okay_button.pack(pady=10)    
+window5.mainloop()  
+
+
+
 #call the correct function 
 if file_type =='abf':
     window4= Tk() 
@@ -130,12 +148,15 @@ if file_type =='abf':
         run_abf_spike_analyzer(file, species, connection)
 
 
-elif (file_type == 'nwb') and (multipatch == 'no multipatch'):
+elif (file_type == 'nwb') and (multipatch == 'no multipatch') and (CellFeats == 'No Cell Features'):
     run_nwb_ttl_analyzer(file, species)
-    
+elif (file_type == 'nwb') and (multipatch == 'no multipatch') and (CellFeats == 'Cell Features'):
+   results, SagDf =  run_nwb_SpikeFeats(file, species)    
 elif (file_type == 'nwb') and (multipatch == 'multipatch'):
     multipatch_nwb_analyzer(file, connection)
     
+    
+
 
 
 

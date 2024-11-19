@@ -25,21 +25,25 @@ def SpikeFeats(f, sweep_table):
         ax[0].plot(t,v)
         ax[1].plot(t,I)
         #run results to find first sweep after rheobase
-        ext = SpikeFeatureExtractor()
-        results = ext.process(t,v,I)
-        if results.empty:
-            # Create a consistent row with None for other parameters
-            results = pd.DataFrame({
-                'spikes': [0],
-                'sweep': [i],
-                'stim': [j]
-            })
-        else:   
-            results['spikes'] = len(results)
-            results['sweep']  = i
-            results['stim']   = j
-        df = pd.concat([df,results],axis = 0)
-    return results 
+        if str(v[0])!='nan':
+            ext = SpikeFeatureExtractor()
+            results = ext.process(t,v,I)
+            if results.empty:
+                # Create a consistent row with None for other parameters
+                print('no spikes found in sweep')
+                results = pd.DataFrame({
+                    'spikes': [0],
+                    'sweep': [i],
+                    'stim': [j]
+                })
+            else:   
+                results['spikes'] = len(results)
+                results['sweep']  = i
+                results['stim']   = j   
+            df = pd.concat([df,results],axis = 0)
+        else:
+            print('empty array found skipping')
+    return df 
 
 def InputResistance(f, sweep_table, sharex=True):
     fig, ax = plt.subplots(2,1)  
